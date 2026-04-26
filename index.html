@@ -632,12 +632,12 @@ function formatCode(input) {
 }
 
 async function submitCode() {
-  const code = document.getElementById('code-input').value.trim().toUpperCase();
+  const code = document.getElementById('code-input').value.trim().toUpperCase().replace(/-/g, '');
   const errEl = document.getElementById('login-error');
   errEl.textContent = '';
 
-  if (!code || code.length < 9) {
-    errEl.textContent = 'コードを入力してください (例: ABCD-1234)';
+  if (!code || code.length < 4) {
+    errEl.textContent = 'コードを入力してください';
     return;
   }
 

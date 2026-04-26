@@ -650,7 +650,7 @@ async function submitCode() {
 
   // Firebase でコード確認
   try {
-    const docRef = window._fsDoc(window._db, 'access_codes', code);
+    const docRef = window._fsDoc(window._db, 'codes', code);
     const snap = await window._fsGetDoc(docRef);
     if (snap.exists() && snap.data().active) {
       loginSuccess(code, snap.data().isDemo || false);

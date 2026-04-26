@@ -738,6 +738,8 @@ function renderHome() {
 function startQuiz(mode, count, chapterNum) {
   let pool = [...QUESTIONS];
 
+  if (state.isDemo) pool = pool.slice(0, 10); // デモは1章の10問のみ
+
   if (mode === 'chapter') {
     pool = pool.filter(q => q.chapter === chapterNum);
   } else if (mode === 'weak') {
@@ -751,9 +753,7 @@ function startQuiz(mode, count, chapterNum) {
   }
 
   // シャッフル
-  pool = pool.sort(() => Math.random() - .5);
-  if (state.isDemo) pool = pool.slice(0, 5); // デモは章ごと5問のみ
-  else pool = pool.slice(0, count);
+  pool = pool.sort(() => Math.random() - .5).slice(0, count);
 
   if (pool.length === 0) {
     showToast('出題できる問題がありません');

@@ -10,6 +10,7 @@
 <title>心リハ指導士 問題集</title>
 <link rel="manifest" href="manifest.json">
 <script src="questions.js"></script>
+<script src="ecg_questions.js"></script>
 
 <!-- Firebase SDK -->
 <script type="module">
@@ -532,6 +533,11 @@ html, body {
       <div class="quiz-chapter-tag" id="q-chapter-tag"></div>
       <div class="quiz-question-text" id="q-text"></div>
     </div>
+    <div id="ecg-container" style="display:none; margin: 0 16px 12px;">
+      <div style="background:#fff8f0; border:1px solid #c0502a; border-radius:8px; overflow:hidden;">
+        <svg id="ecg-svg" viewBox="0 0 660 120" width="100%" xmlns="http://www.w3.org/2000/svg" style="display:block;"></svg>
+      </div>
+    </div>
     <div class="quiz-options" id="q-options"></div>
     <div class="explanation-box" id="explanation-box">
       <div class="explanation-title">解説</div>
@@ -710,6 +716,7 @@ function renderHome() {
     { num: 3, name: 'CPX・負荷試験',   icon: '📊' },
     { num: 4, name: '運動療法',         icon: '🏃' },
     { num: 5, name: '指導・カウンセリング', icon: '💬' },
+    { num: 6, name: '心電図・不整脈',       icon: '📈' },
   ];
   const list = document.getElementById('chapter-list');
   const history = getHistory();
@@ -794,6 +801,15 @@ function renderQuestion() {
   // 問題文
   document.getElementById('q-chapter-tag').textContent = `${question.chapter}章 ${question.chapterName}`;
   document.getElementById('q-text').textContent = `問${question.qNum}．${question.question}`;
+
+  // 心電図SVG
+  const ecgContainer = document.getElementById('ecg-container');
+  if (question.ecgType) {
+    ecgContainer.style.display = 'block';
+    drawECG(document.getElementById('ecg-svg'), question.ecgType);
+  } else {
+    ecgContainer.style.display = 'none';
+  }
 
   // 選択肢
   const optContainer = document.getElementById('q-options');

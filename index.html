@@ -491,6 +491,11 @@ html, body {
       </div>
     </div>
 
+    <!-- 注意書き -->
+    <div style="font-size:12px;color:var(--text-sub);text-align:center;margin:0 0 16px;line-height:1.6;">
+      ※ 不正解の問題は自動で弱点リストに追加されます<br>正解すると弱点リストから外れます
+    </div>
+
     <!-- ランダム出題 -->
     <div class="random-btn-wrap">
       <button class="btn btn-primary" onclick="startQuiz('all', 20)">
@@ -855,8 +860,17 @@ function selectOption(selected) {
   // 全体統計更新
   const stats = getStats();
   stats.total = (stats.total || 0) + 1;
-  if (isCorrect) stats.correct = (stats.correct || 0) + 1;
-  else           stats.wrong   = (stats.wrong   || 0) + 1;
+  if (!stats.weakIds) stats.weakIds = [];
+  if (isCorrect) {
+    stats.correct = (stats.correct || 0) + 1;
+    // 正解したら弱点リストから外す
+    const wi = stats.weakIds.indexOf(question.id);
+    if (wi >= 0) stats.weakIds.splice(wi, 1);
+  } else {
+    stats.wrong = (stats.wrong || 0) + 1;
+    // 不正解なら弱点リストに自動追加
+    if (!stats.weakIds.includes(question.id)) stats.weakIds.push(question.id);
+  }
   saveStats(stats);
 
   // 解説表示

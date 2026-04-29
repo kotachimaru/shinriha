@@ -333,13 +333,23 @@ html, body {
   margin: 0 16px 16px;
   background: var(--surface2);
   border-radius: var(--radius);
-  padding: 16px;
+  padding: 14px 16px;
   border-left: 3px solid var(--accent);
   display: none;
 }
 .explanation-box.show { display: block; }
-.explanation-title { font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+.explanation-box details summary {
+  font-size: 13px; font-weight: 700; color: var(--accent);
+  list-style: none; cursor: pointer; user-select: none;
+  display: flex; align-items: center; gap: 6px;
+}
+.explanation-box details summary::after { content: ' ▼'; }
+.explanation-box details[open] summary::after { content: ' ▲'; }
+.explanation-box details summary::-webkit-details-marker { display: none; }
+.explanation-box details[open] summary { margin-bottom: 10px; }
 .explanation-text { font-size: 14px; line-height: 1.7; color: var(--text); }
+.explanation-text ul { padding-left: 16px; margin: 0; }
+.explanation-text ul li { margin-bottom: 5px; }
 
 .quiz-footer {
   padding: 12px 16px calc(var(--safe-bottom) + 12px);
@@ -405,6 +415,14 @@ html, body {
 .result-item.wrong   .num { color: var(--danger); }
 
 .weak-section { padding: 0 16px 16px; }
+.weak-section details summary {
+  cursor: pointer; list-style: none; user-select: none;
+  font-size: 14px; font-weight: 700; color: var(--text);
+  display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
+}
+.weak-section details summary::after { content: ' ▼'; font-size: 12px; color: var(--text2); }
+.weak-section details[open] summary::after { content: ' ▲'; font-size: 12px; color: var(--text2); }
+.weak-section details summary::-webkit-details-marker { display: none; }
 .weak-q-item {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -417,6 +435,10 @@ html, body {
 }
 
 .result-btns { padding: 0 16px calc(var(--safe-bottom) + 16px); display: flex; flex-direction: column; gap: 10px; }
+
+/* ホーム セクション */
+.section-block { margin-bottom: 20px; }
+.home-quiz-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
 /* ===== トースト ===== */
 .toast {
@@ -500,19 +522,20 @@ html, body {
       ※ 不正解の問題は自動で弱点リストに追加されます<br>正解すると弱点リストから外れます<br>解説画面の右下の ☆ をタップして手動で追加することもできます
     </div>
 
-    <!-- ランダム出題 -->
-    <div class="random-btn-wrap">
-      <button class="btn btn-primary" onclick="startQuiz('all', 20)">
-        ランダム20問に挑戦
-      </button>
+    <!-- 総合的に学習 -->
+    <div class="section-block">
+      <div class="section-title">総合的に学習</div>
+      <div class="home-quiz-grid">
+        <button class="btn btn-primary" onclick="startQuiz('all', 20)">ランダム20問に挑戦</button>
+        <button class="btn btn-outline" onclick="startQuiz('weak', 20)">弱点問題を復習</button>
+      </div>
     </div>
-    <button class="btn btn-outline" onclick="startQuiz('weak', 20)" style="margin-bottom:20px">
-      弱点問題を復習
-    </button>
 
-    <!-- 章別出題 -->
-    <div class="section-title">章別に学習</div>
-    <div class="chapter-list" id="chapter-list"></div>
+    <!-- 章別に学習 -->
+    <div class="section-block">
+      <div class="section-title">章別に学習</div>
+      <div class="chapter-list" id="chapter-list"></div>
+    </div>
   </div>
 </div>
 
@@ -543,16 +566,18 @@ html, body {
     </div>
     <div class="quiz-options" id="q-options"></div>
     <div class="explanation-box" id="explanation-box">
-      <div class="explanation-title">解説</div>
-      <div class="explanation-text" id="explanation-text"></div>
+      <details>
+        <summary>解説を見る</summary>
+        <div class="explanation-text" id="explanation-text"></div>
+      </details>
     </div>
   </div>
 
   <div class="quiz-footer">
     <button class="weak-btn" id="weak-toggle-btn" onclick="toggleWeak()" title="弱点登録">☆</button>
-    <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()" disabled>
-      次の問題へ
-    </button>
+    <button class="btn btn-outline" id="prev-btn" onclick="prevQuestion()" style="display:none;flex:1">← 前へ</button>
+    <button class="btn btn-primary" id="confirm-btn" onclick="confirmAnswer()" style="flex:2" disabled>回答する</button>
+    <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()" style="display:none;flex:2">次の問題へ</button>
   </div>
 </div>
 
@@ -610,7 +635,8 @@ let state = {
     correct: 0,
     wrong: 0,
     answered: false,
-    wrongIds: [],     // このセッションで間違えたID
+    selectedOption: null,
+    wrongIds: [],
   }
 };
 
@@ -824,11 +850,17 @@ function renderQuestion() {
     </button>
   `).join('');
 
-  // 解説欄・ボタン
+  // 解説欄リセット
   document.getElementById('explanation-box').classList.remove('show');
-  document.getElementById('explanation-text').textContent = '';
-  document.getElementById('next-btn').disabled = true;
-  document.getElementById('next-btn').textContent = q.current < total - 1 ? '次の問題へ' : '結果を見る';
+  document.getElementById('explanation-text').innerHTML = '';
+
+  // ボタン表示制御
+  document.getElementById('confirm-btn').disabled = true;
+  document.getElementById('confirm-btn').style.display = '';
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.style.display = 'none';
+  nextBtn.textContent = q.current < total - 1 ? '次の問題へ' : '結果を見る';
+  document.getElementById('prev-btn').style.display = q.current > 0 ? '' : 'none';
 
   // 弱点ボタン
   const stats = getStats();
@@ -838,13 +870,23 @@ function renderQuestion() {
   weakBtn.className = 'weak-btn' + (isWeak ? ' marked' : '');
 
   q.answered = false;
+  q.selectedOption = null;
 
   // スクロールトップ
   document.getElementById('quiz-body').scrollTop = 0;
 }
 
-function selectOption(selected) {
+function selectOption(i) {
   if (state.quiz.answered) return;
+  state.quiz.selectedOption = i;
+  for (let j = 0; j < 5; j++) document.getElementById(`opt-${j}`).classList.remove('selected');
+  document.getElementById(`opt-${i - 1}`).classList.add('selected');
+  document.getElementById('confirm-btn').disabled = false;
+}
+
+function confirmAnswer() {
+  const selected = state.quiz.selectedOption;
+  if (state.quiz.answered || !selected) return;
   state.quiz.answered = true;
 
   const question = state.quiz.questions[state.quiz.current];
@@ -860,12 +902,8 @@ function selectOption(selected) {
   }
 
   // スコア更新
-  if (isCorrect) {
-    state.quiz.correct++;
-  } else {
-    state.quiz.wrong++;
-    state.quiz.wrongIds.push(question.id);
-  }
+  if (isCorrect) { state.quiz.correct++; }
+  else { state.quiz.wrong++; state.quiz.wrongIds.push(question.id); }
   document.getElementById('badge-correct').textContent = state.quiz.correct;
   document.getElementById('badge-wrong').textContent = state.quiz.wrong;
 
@@ -882,22 +920,24 @@ function selectOption(selected) {
   if (!stats.weakIds) stats.weakIds = [];
   if (isCorrect) {
     stats.correct = (stats.correct || 0) + 1;
-    // 正解したら弱点リストから外す
     const wi = stats.weakIds.indexOf(question.id);
     if (wi >= 0) stats.weakIds.splice(wi, 1);
   } else {
     stats.wrong = (stats.wrong || 0) + 1;
-    // 不正解なら弱点リストに自動追加
     if (!stats.weakIds.includes(question.id)) stats.weakIds.push(question.id);
   }
   saveStats(stats);
 
-  // 解説表示
-  document.getElementById('explanation-text').textContent = question.explanation;
+  // 解説表示（折りたたみ）
+  document.getElementById('explanation-text').innerHTML = formatExplanation(question.explanation);
   document.getElementById('explanation-box').classList.add('show');
-  document.getElementById('next-btn').disabled = false;
 
-  // Firebase記録（バックグラウンド）
+  // ボタン切り替え
+  document.getElementById('confirm-btn').style.display = 'none';
+  document.getElementById('prev-btn').style.display = 'none';
+  document.getElementById('next-btn').style.display = '';
+
+  // Firebase記録
   if (window._db && !state.isDemo) {
     const docRef = window._fsDoc(window._db, 'user_stats', state.accessCode);
     window._fsSetDoc(docRef, {
@@ -907,6 +947,20 @@ function selectOption(selected) {
       lastSeen: new Date().toISOString(),
     }, { merge: true }).catch(() => {});
   }
+}
+
+function prevQuestion() {
+  if (state.quiz.current <= 0 || state.quiz.answered) return;
+  state.quiz.current--;
+  renderQuestion();
+}
+
+function formatExplanation(text) {
+  const parts = text.split(/(?=[①②③④⑤])/).filter(p => p.trim());
+  if (parts.length > 1) {
+    return '<ul>' + parts.map(p => `<li>${p.trim()}</li>`).join('') + '</ul>';
+  }
+  return `<p style="margin:0">${text}</p>`;
 }
 
 function nextQuestion() {
@@ -971,13 +1025,14 @@ function showResult() {
   if (q.wrongIds.length > 0) {
     const wrongQs = q.questions.filter(qu => q.wrongIds.includes(qu.id));
     weakSec.innerHTML = `
-      <div class="section-title" style="padding:0;margin-bottom:10px">間違えた問題</div>
-      ${wrongQs.map(qu => `
-        <div class="weak-q-item">
-          <strong>${qu.chapter}章・問${qu.qNum}</strong>
-          ${qu.question.substring(0, 50)}${qu.question.length > 50 ? '…' : ''}
-        </div>
-      `).join('')}
+      <details open>
+        <summary>間違えた問題（${wrongQs.length}問）</summary>
+        ${wrongQs.map(qu => `
+          <div class="weak-q-item">
+            <strong>${qu.chapter}章・問${qu.qNum}</strong>　${qu.question.substring(0, 50)}${qu.question.length > 50 ? '…' : ''}
+          </div>
+        `).join('')}
+      </details>
     `;
   } else {
     weakSec.innerHTML = `<div style="text-align:center;color:var(--success);padding:16px;font-weight:700">全問正解！完璧です！</div>`;

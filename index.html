@@ -703,11 +703,23 @@ async function submitCode() {
   }
 }
 
+// =====================================================
+// アナリティクス計測（Firestore）
+// =====================================================
+function trackEvent(field) {
+  if (!window._db) return;
+  const ref = window._fsDoc(window._db, 'analytics', 'shinriha');
+  window._fsSetDoc(ref, { [field]: window._fsIncrement(1) }, { merge: true })
+    .catch(() => {});
+}
+
 function demoLogin() {
+  trackEvent('demoClicks');
   loginSuccess('DEMO', true);
 }
 
 function loginSuccess(code, isDemo) {
+  if (!isDemo) trackEvent('paidLogins');
   state.isLoggedIn = true;
   state.isDemo = isDemo;
   state.accessCode = code;
@@ -1069,6 +1081,9 @@ function init() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
+
+  // ページビュー計測（Firebase初期化を待つ）
+  setTimeout(() => trackEvent('pageViews'), 800);
 
   // 前回のコードが残っていれば自動ログイン
   const saved = localStorage.getItem(LS_CODE);

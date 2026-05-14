@@ -668,18 +668,12 @@ function showScreen(id) {
 // =====================================================
 // ログイン
 // =====================================================
-function formatCode(input) {
-  let v = input.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-  if (v.length > 4) v = v.slice(0,4) + '-' + v.slice(4,8);
-  input.value = v;
-}
-
-// 入力欄：メール以外は数字・英字のみ大文字化（ハイフンなし）
+// 入力欄：英数字のみ許可・大文字化（ハイフン等は除去）
 function onLoginInput(el) {
   if (!el.value.includes('@')) {
     const pos = el.selectionStart;
-    el.value = el.value.replace(/[^A-Za-z0-9@._\-]/g, '').toUpperCase();
-    el.setSelectionRange(pos, pos);
+    el.value = el.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    try { el.setSelectionRange(pos, pos); } catch(e) {}
   }
 }
 

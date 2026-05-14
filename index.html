@@ -473,23 +473,32 @@ html, body {
   <div class="login-sub">心臓リハビリテーション指導士試験対策</div>
 
   <div class="login-box">
-    <label>アクセスコードを入力</label>
-    <input type="text" id="code-input" placeholder="XXXX-XXXX"
-      maxlength="9" autocomplete="off" autocapitalize="characters"
-      oninput="formatCode(this)">
+    <label id="login-label">アクセスコード または メールアドレスを入力</label>
+    <input type="text" id="code-input" placeholder="コード or example@email.com"
+      maxlength="100" autocomplete="off" autocapitalize="off"
+      oninput="onLoginInput(this)">
     <button class="btn btn-primary" onclick="submitCode()">ログイン</button>
     <div class="login-error" id="login-error"></div>
   </div>
 
-  <div class="demo-hint">
+  <div class="demo-hint" style="margin-top:12px;">
+    <a id="subscribe-btn" href="https://buy.stripe.com/test_eVq8wIgmP9SJ8bTe5yew800" target="_blank"
+      style="display:inline-block;background:linear-gradient(90deg,#2563eb,#1d4ed8);color:#fff;font-size:14px;font-weight:700;padding:10px 20px;border-radius:10px;text-decoration:none;">
+      月額 ¥980 で申し込む →
+    </a>
+  </div>
+  <div class="demo-hint" style="margin-top:6px;font-size:12px;color:var(--text2);">
+    ※ 月額プランはメールアドレスでログイン
+  </div>
+  <div class="demo-hint" style="margin-top:10px;">
+    <a href="https://note.com/kotachi_no_heya/n/n40ae3b3ff320" target="_blank" style="color:var(--accent);font-size:13px;">一括購入（¥2,000）はこちら →</a>
+  </div>
+  <div class="demo-hint" style="margin-top:8px;">
     コードをお持ちでない方 →
     <button onclick="demoLogin()" style="background:none;border:none;color:var(--accent);font-size:inherit;cursor:pointer;text-decoration:underline;padding:0;">デモ版で試す（10問）</button>
   </div>
   <div class="demo-hint" style="margin-top:4px;font-size:12px;color:var(--text2);">
     ※ デモ版は第1章の10問のみ
-  </div>
-  <div class="demo-hint" style="margin-top:8px;">
-    <a href="https://note.com/kotachi_no_heya/n/n40ae3b3ff320" target="_blank" style="color:var(--accent);font-size:13px;">noteで購入する →</a>
   </div>
 </div>
 
@@ -674,24 +683,41 @@ function formatCode(input) {
   input.value = v;
 }
 
+// 入力欄の変化に応じてプレースホルダーを調整
+function onLoginInput(el) {
+  const v = el.value;
+  if (v.includes('@')) {
+    el.autocapitalize = 'off';
+  } else {
+    formatCode(el);
+  }
+}
+
 async function submitCode() {
-  const code = document.getElementById('code-input').value.trim().toUpperCase();
+  const raw = document.getElementById('code-input').value.trim();
   const errEl = document.getElementById('login-error');
   errEl.textContent = '';
 
-  if (!code || code.length < 4) {
-    errEl.textContent = 'コードを入力してください';
+  if (!raw || raw.length < 4) {
+    errEl.textContent = 'コードまたはメールアドレスを入力してください';
     return;
   }
 
   // Firebase未設定の場合はデモモードへ
   if (!window._db) {
     showToast('Firebase未設定のため、デモモードで起動します');
-    loginSuccess(code, false);
+    loginSuccess(raw, false);
     return;
   }
 
-  // Firebase でコード確認
+  // メールアドレス判定 → サブスクチェック
+  if (raw.includes('@')) {
+    await submitEmail(raw.toLowerCase(), errEl);
+    return;
+  }
+
+  // コードログイン（ハイフンを除去してFirestoreと一致させる）
+  const code = raw.replace(/-/g, '').toUpperCase();
   try {
     const docRef = window._fsDoc(window._db, 'codes', code);
     const snap = await window._fsGetDoc(docRef);
@@ -703,6 +729,31 @@ async function submitCode() {
   } catch(e) {
     console.error(e);
     errEl.textContent = 'ネットワークエラー。オフラインの場合はデモ版をお試しください。';
+  }
+}
+
+async function submitEmail(email, errEl) {
+  try {
+    const docRef = window._fsDoc(window._db, 'subscribers', email);
+    const snap = await window._fsGetDoc(docRef);
+    if (!snap.exists()) {
+      errEl.textContent = 'このメールアドレスの登録が見つかりません。月額プランにご登録ください。';
+      return;
+    }
+    const data = snap.data();
+    if (data.status !== 'active') {
+      errEl.textContent = 'サブスクリプションが有効ではありません。お支払い状況をご確認ください。';
+      return;
+    }
+    const expiresAt = data.expiresAt?.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt);
+    if (expiresAt < new Date()) {
+      errEl.textContent = 'サブスクリプションの有効期限が切れています。';
+      return;
+    }
+    loginSuccess(email, false);
+  } catch(e) {
+    console.error(e);
+    errEl.textContent = 'ネットワークエラー。接続を確認してください。';
   }
 }
 

@@ -473,32 +473,23 @@ html, body {
   <div class="login-sub">心臓リハビリテーション指導士試験対策</div>
 
   <div class="login-box">
-    <label id="login-label">アクセスコード または メールアドレスを入力</label>
-    <input type="text" id="code-input" placeholder="例：84271053"
-      maxlength="100" autocomplete="off" autocapitalize="off"
+    <label>アクセスコードを入力</label>
+    <input type="text" id="code-input" placeholder="XXXXXXXX"
+      maxlength="20" autocomplete="off" autocapitalize="off"
       oninput="onLoginInput(this)">
     <button class="btn btn-primary" onclick="submitCode()">ログイン</button>
     <div class="login-error" id="login-error"></div>
   </div>
 
-  <div class="demo-hint" style="margin-top:12px;">
-    <a id="subscribe-btn" href="https://buy.stripe.com/test_eVq8wIgmP9SJ8bTe5yew800" target="_blank"
-      style="display:inline-block;background:linear-gradient(90deg,#2563eb,#1d4ed8);color:#fff;font-size:14px;font-weight:700;padding:10px 20px;border-radius:10px;text-decoration:none;">
-      月額 ¥980 で申し込む →
-    </a>
-  </div>
-  <div class="demo-hint" style="margin-top:6px;font-size:12px;color:var(--text2);">
-    ※ 月額プランはメールアドレスでログイン
-  </div>
-  <div class="demo-hint" style="margin-top:10px;">
-    <a href="https://note.com/kotachi_no_heya/n/n40ae3b3ff320" target="_blank" style="color:var(--accent);font-size:13px;">一括購入（¥2,000）はこちら →</a>
-  </div>
-  <div class="demo-hint" style="margin-top:8px;">
+  <div class="demo-hint">
     コードをお持ちでない方 →
     <button onclick="demoLogin()" style="background:none;border:none;color:var(--accent);font-size:inherit;cursor:pointer;text-decoration:underline;padding:0;">デモ版で試す（10問）</button>
   </div>
   <div class="demo-hint" style="margin-top:4px;font-size:12px;color:var(--text2);">
     ※ デモ版は第1章の10問のみ
+  </div>
+  <div class="demo-hint" style="margin-top:8px;">
+    <a href="https://note.com/kotachi_no_heya/n/n40ae3b3ff320" target="_blank" style="color:var(--accent);font-size:13px;">noteで購入する →</a>
   </div>
 </div>
 

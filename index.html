@@ -474,7 +474,7 @@ html, body {
 
   <div class="login-box">
     <label id="login-label">アクセスコード または メールアドレスを入力</label>
-    <input type="text" id="code-input" placeholder="コード or example@email.com"
+    <input type="text" id="code-input" placeholder="例：84271053"
       maxlength="100" autocomplete="off" autocapitalize="off"
       oninput="onLoginInput(this)">
     <button class="btn btn-primary" onclick="submitCode()">ログイン</button>
@@ -683,13 +683,12 @@ function formatCode(input) {
   input.value = v;
 }
 
-// 入力欄の変化に応じてプレースホルダーを調整
+// 入力欄：メール以外は数字・英字のみ大文字化（ハイフンなし）
 function onLoginInput(el) {
-  const v = el.value;
-  if (v.includes('@')) {
-    el.autocapitalize = 'off';
-  } else {
-    formatCode(el);
+  if (!el.value.includes('@')) {
+    const pos = el.selectionStart;
+    el.value = el.value.replace(/[^A-Za-z0-9@._\-]/g, '').toUpperCase();
+    el.setSelectionRange(pos, pos);
   }
 }
 

@@ -143,10 +143,12 @@ html, body {
    1. ログイン画面
    ========================================= */
 #screen-login {
-  justify-content: center;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  justify-content: flex-start;
   align-items: center;
   gap: 0;
-  padding: 0 24px;
+  padding: 32px 24px calc(var(--safe-bottom) + 32px);
   background: linear-gradient(160deg, #0f172a 0%, #1e3a5f 100%);
 }
 .login-logo {
@@ -158,7 +160,7 @@ html, body {
 }
 .login-sub {
   font-size: 13px; color: var(--text2); text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 24px;
 }
 .login-box {
   background: var(--surface);
@@ -194,6 +196,66 @@ html, body {
   margin-top: 20px;
 }
 .demo-hint a { color: var(--accent); text-decoration: none; }
+
+/* ---- 新ログイン UI ---- */
+.login-section-label {
+  display: block; font-size: 11px; color: var(--text2);
+  font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.login-code-input {
+  width: 100%; padding: 14px;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 10px; color: var(--text);
+  font-size: 18px; letter-spacing: 4px; text-align: center;
+  margin-bottom: 10px; outline: none; display: block;
+}
+.login-code-input:focus { border-color: var(--primary); }
+.login-divider {
+  display: flex; align-items: center; gap: 12px;
+  color: var(--text2); font-size: 12px;
+  margin: 16px 0; width: 100%;
+}
+.login-divider::before, .login-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+.subscribe-card {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 16px; padding: 16px; width: 100%;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.subscribe-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(245,158,11,0.15); color: var(--warn);
+  font-size: 11px; font-weight: 700;
+  padding: 3px 8px; border-radius: 20px; width: fit-content;
+}
+.email-input {
+  width: 100%; padding: 12px 14px;
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 10px; color: var(--text);
+  font-size: 14px; outline: none; display: block;
+}
+.email-input:focus { border-color: var(--primary); }
+.btn-subscribe {
+  display: block; width: 100%; padding: 14px; border: none;
+  border-radius: var(--radius); font-size: 15px; font-weight: 700;
+  cursor: pointer; text-align: center;
+  background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff;
+}
+.btn-subscribe:active { opacity: .8; transform: scale(.98); }
+.btn-portal {
+  background: none; border: none; color: var(--text2);
+  font-size: 12px; cursor: pointer; text-align: center;
+  text-decoration: underline; padding: 4px; width: 100%;
+}
+.btn-demo-plain {
+  display: block; width: 100%; padding: 14px;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--radius); color: var(--text2);
+  font-size: 14px; font-weight: 600; cursor: pointer; text-align: center;
+}
+.btn-demo-plain:active { opacity: .8; transform: scale(.98); }
 
 /* =========================================
    2. ホーム画面
@@ -472,24 +534,38 @@ html, body {
   <div class="login-title">心リハ指導士<br>問題集</div>
   <div class="login-sub">心臓リハビリテーション指導士試験対策</div>
 
-  <div class="login-box">
-    <label>アクセスコードを入力</label>
-    <input type="text" id="code-input" placeholder="XXXXXXXX"
-      maxlength="20" autocomplete="off" autocapitalize="off"
+  <!-- コードログイン -->
+  <div style="width:100%">
+    <span class="login-section-label">アクセスコードをお持ちの方</span>
+    <input type="text" id="code-input" class="login-code-input"
+      placeholder="XXXXXXXX" maxlength="20"
+      autocomplete="off" autocapitalize="off"
       oninput="onLoginInput(this)">
     <button class="btn btn-primary" onclick="submitCode()">ログイン</button>
     <div class="login-error" id="login-error"></div>
   </div>
 
-  <div class="demo-hint">
-    コードをお持ちでない方 →
-    <button onclick="demoLogin()" style="background:none;border:none;color:var(--accent);font-size:inherit;cursor:pointer;text-decoration:underline;padding:0;">デモ版で試す（10問）</button>
+  <!-- または -->
+  <div class="login-divider">または</div>
+
+  <!-- 月額プランカード -->
+  <div class="subscribe-card">
+    <span class="subscribe-badge">✦ 月額プラン</span>
+    <p style="font-size:13px;color:var(--text2);line-height:1.5">月額プランにご登録のメールアドレスを入力してください</p>
+    <input type="email" id="email-input" class="email-input"
+      placeholder="メールアドレスを入力">
+    <div class="login-error" id="email-error" style="min-height:0;margin-top:-2px"></div>
+    <button class="btn btn-primary" onclick="submitEmailLogin()" style="padding:12px;font-size:14px">メールアドレスでログイン</button>
+    <button class="btn-subscribe" onclick="openSubscribePage()">▶ 月額¥980で申し込む</button>
+    <button class="btn-portal" onclick="openPortal()">マイページ（退会・カード変更・領収書）</button>
   </div>
-  <div class="demo-hint" style="margin-top:4px;font-size:12px;color:var(--text2);">
-    ※ デモ版は第1章の10問のみ
-  </div>
-  <div class="demo-hint" style="margin-top:8px;">
-    <a href="https://note.com/kotachi_no_heya/n/n40ae3b3ff320" target="_blank" style="color:var(--accent);font-size:13px;">noteで購入する →</a>
+
+  <!-- 無料体験 -->
+  <div class="login-divider">無料体験</div>
+
+  <div style="width:100%;text-align:center">
+    <div style="font-size:11px;color:var(--text2);margin-bottom:8px">※ デモ版は第1章の10問のみ</div>
+    <button class="btn-demo-plain" onclick="demoLogin()">デモを試す（無料・10問）</button>
   </div>
 </div>
 
@@ -716,6 +792,56 @@ async function submitCode() {
   }
 }
 
+async function submitEmailLogin() {
+  const raw = document.getElementById('email-input').value.trim();
+  const errEl = document.getElementById('email-error');
+  errEl.textContent = '';
+  if (!raw.includes('@')) {
+    errEl.textContent = 'メールアドレスを正しく入力してください';
+    return;
+  }
+  if (!window._db) {
+    errEl.textContent = 'Firebase接続エラー。しばらくして再度お試しください。';
+    return;
+  }
+  await submitEmail(raw.toLowerCase(), errEl);
+}
+
+function openSubscribePage() {
+  // TODO: Stripeペイメントリンク（ダッシュボードで確認後に差し替え）
+  window.open('https://buy.stripe.com/SHINRIHA_LINK', '_blank');
+}
+
+async function openPortal() {
+  const email = document.getElementById('email-input').value.trim().toLowerCase();
+  const errEl = document.getElementById('email-error');
+  errEl.textContent = '';
+  if (!email.includes('@')) {
+    errEl.textContent = 'メールアドレスを入力してください';
+    return;
+  }
+  errEl.textContent = '読み込み中...';
+  try {
+    const res = await fetch('https://us-central1-shinriha-7910b.cloudfunctions.net/createPortalSession', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        email: email,
+        returnUrl: 'https://kotachimaru.github.io/shinriha/'
+      })
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      errEl.textContent = 'ご登録が見つかりません。月額プランにご登録のアドレスをご確認ください。';
+    }
+  } catch(e) {
+    console.error(e);
+    errEl.textContent = 'エラーが発生しました。接続をご確認ください。';
+  }
+}
+
 async function submitEmail(email, errEl) {
   try {
     const docRef = window._fsDoc(window._db, 'subscribers', email);
@@ -725,15 +851,20 @@ async function submitEmail(email, errEl) {
       return;
     }
     const data = snap.data();
-    if (data.status !== 'active') {
-      errEl.textContent = 'サブスクリプションが有効ではありません。お支払い状況をご確認ください。';
-      return;
-    }
     const expiresAt = data.expiresAt?.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt);
-    if (expiresAt < new Date()) {
-      errEl.textContent = 'サブスクリプションの有効期限が切れています。';
+    const isValid = expiresAt > new Date();
+
+    // 有効期限切れ
+    if (!isValid) {
+      errEl.textContent = '有効期限が切れています。再度お申し込みください。';
       return;
     }
+    // 支払い失敗（期限内でも入金未確認）
+    if (data.status === 'past_due' || data.status === 'inactive') {
+      errEl.textContent = 'お支払いに問題が発生しています。マイページでカード情報をご確認ください。';
+      return;
+    }
+    // active または canceled（期限内）→ ログイン許可
     loginSuccess(email, false);
   } catch(e) {
     console.error(e);
@@ -771,6 +902,8 @@ function logout() {
   state.isLoggedIn = false;
   document.getElementById('code-input').value = '';
   document.getElementById('login-error').textContent = '';
+  document.getElementById('email-input').value = '';
+  document.getElementById('email-error').textContent = '';
   showScreen('login');
 }
 

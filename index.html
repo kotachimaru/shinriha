@@ -524,6 +524,48 @@ html, body {
   margin: 40px auto;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---- 申込確認モーダル ---- */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7); z-index: 200;
+  align-items: flex-end; justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal-sheet {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  padding: 20px 20px calc(var(--safe-bottom) + 24px);
+  width: 100%; max-height: 90vh;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+.modal-handle {
+  width: 36px; height: 4px; background: var(--border);
+  border-radius: 2px; margin: 0 auto 18px;
+}
+.modal-title {
+  font-size: 17px; font-weight: 800;
+  margin-bottom: 14px; text-align: center;
+}
+.confirm-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.confirm-item:last-of-type { border-bottom: none; }
+.confirm-icon { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+.confirm-label { font-size: 11px; color: var(--text2); margin-bottom: 2px; }
+.confirm-value { font-size: 13px; color: var(--text); line-height: 1.5; }
+.agree-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin: 14px 0; padding: 14px;
+  background: var(--bg); border-radius: 12px;
+}
+.agree-row input[type="checkbox"] {
+  width: 20px; height: 20px; accent-color: var(--primary);
+  flex-shrink: 0; margin-top: 1px;
+}
+.agree-row label { font-size: 12px; color: var(--text2); cursor: pointer; line-height: 1.5; }
+.modal-buttons { display: flex; flex-direction: column; gap: 8px; }
 </style>
 </head>
 <body>
@@ -808,6 +850,29 @@ async function submitEmailLogin() {
 }
 
 function openSubscribePage() {
+  document.getElementById('agree-check').checked = false;
+  document.getElementById('agree-btn').disabled = true;
+  document.getElementById('agree-btn').style.opacity = '0.4';
+  document.getElementById('confirm-modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('confirm-modal').classList.remove('show');
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('confirm-modal')) closeModal();
+}
+
+function toggleAgreeBtn() {
+  const checked = document.getElementById('agree-check').checked;
+  const btn = document.getElementById('agree-btn');
+  btn.disabled = !checked;
+  btn.style.opacity = checked ? '1' : '0.4';
+}
+
+function proceedToStripe() {
+  closeModal();
   window.open('https://buy.stripe.com/28EdR2gq852HfNRbV673G00', '_blank');
 }
 
@@ -1264,5 +1329,69 @@ function init() {
 
 init();
 </script>
+
+<!-- ===================== 申込確認モーダル ===================== -->
+<div class="modal-overlay" id="confirm-modal" onclick="handleOverlayClick(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">申込内容のご確認</div>
+
+    <div class="confirm-item">
+      <span class="confirm-icon">📖</span>
+      <div>
+        <div class="confirm-label">サービス</div>
+        <div class="confirm-value">心臓リハビリテーション指導士 問題集 月額プラン</div>
+      </div>
+    </div>
+    <div class="confirm-item">
+      <span class="confirm-icon">💳</span>
+      <div>
+        <div class="confirm-label">料金</div>
+        <div class="confirm-value"><strong>月額¥980（税込）</strong>、毎月自動更新</div>
+      </div>
+    </div>
+    <div class="confirm-item">
+      <span class="confirm-icon">🗓</span>
+      <div>
+        <div class="confirm-label">請求タイミング</div>
+        <div class="confirm-value">初回決済日から毎月同日に自動請求されます</div>
+      </div>
+    </div>
+    <div class="confirm-item">
+      <span class="confirm-icon">📱</span>
+      <div>
+        <div class="confirm-label">サービス利用開始</div>
+        <div class="confirm-value">決済完了後すぐに全問題が利用可能になります</div>
+      </div>
+    </div>
+    <div class="confirm-item">
+      <span class="confirm-icon">🚪</span>
+      <div>
+        <div class="confirm-label">解約方法</div>
+        <div class="confirm-value">ログイン画面「マイページ」からいつでも解約できます。解約後は当月末まで利用可能です。</div>
+      </div>
+    </div>
+    <div class="confirm-item">
+      <span class="confirm-icon">📋</span>
+      <div>
+        <div class="confirm-label">法的表示</div>
+        <div class="confirm-value">
+          <a href="https://kotachimaru.github.io/shinriha/tokusho.html" target="_blank" style="color:var(--accent)">特定商取引法に基づく表示</a>　／　<a href="https://kotachimaru.github.io/shinriha/privacy.html" target="_blank" style="color:var(--accent)">プライバシーポリシー</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="agree-row">
+      <input type="checkbox" id="agree-check" onchange="toggleAgreeBtn()">
+      <label for="agree-check">上記の申込内容・<a href="https://kotachimaru.github.io/shinriha/tokusho.html" target="_blank" style="color:var(--accent)">特定商取引法に基づく表示</a>・<a href="https://kotachimaru.github.io/shinriha/privacy.html" target="_blank" style="color:var(--accent)">プライバシーポリシー</a>に同意します</label>
+    </div>
+
+    <div class="modal-buttons">
+      <button class="btn btn-primary" id="agree-btn" disabled onclick="proceedToStripe()" style="opacity:0.4">同意して申し込む</button>
+      <button class="btn" style="background:var(--surface);border:1.5px solid var(--border);color:var(--text2)" onclick="closeModal()">キャンセル</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

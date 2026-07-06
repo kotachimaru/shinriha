@@ -69,8 +69,8 @@ function _drawAF(svg) {
 function _drawBrady(svg) {
   const w = 660, h = 120, bl = 70;
   _ecgGrid(svg, w, h);
-  const rr = 198;
-  const starts = [5, 5+rr, 5+rr*2, 5+rr*3];
+  const rr = 297;                    // 9大マス(0.2秒×9)→ 300÷9＝約33bpm に一致
+  const starts = [5, 5+rr, 5+rr*2];  // R波3拍（画面幅660内に収める）
   let pts = [[0, bl]];
   for (const s of starts) {
     pts.push([s,bl],[s+5,bl],[s+8,bl-7],[s+11,bl],[s+15,bl],[s+17,bl+3],[s+19,bl-28],[s+21,bl+8],[s+24,bl],[s+28,bl-4],[s+33,bl]);
@@ -82,8 +82,8 @@ function _drawBrady(svg) {
 function _drawCHB(svg) {
   const w = 660, h = 120, bl = 70;
   _ecgGrid(svg, w, h);
-  const pStarts = [18, 150, 282, 414, 546];
-  const qStarts = [55, 253, 451, 649];
+  const pStarts = [18, 150, 282, 414, 546];   // 心房P波 PP=132px≒75/分（心室と独立）
+  const qStarts = [55, 338, 621];             // 心室補充収縮 RR=283px≒35bpm（30〜40bpm）
   const events = [
     ...pStarts.map(x => ({ x, t: 'p' })),
     ...qStarts.map(x => ({ x, t: 'q' })),
@@ -139,7 +139,7 @@ function _drawVT(svg) {
   const w = 660, h = 120, bl = 68;
   _ecgGrid(svg, w, h);
   const pts = [[0, bl]];
-  for (let s = 5; s < w - 31; s += 33) {
+  for (let s = 5; s < w - 31; s += 55) {   // RR=55px≒180bpm（100〜250の範囲内）
     pts.push([s,bl],[s+2,bl+4],[s+8,bl-22],[s+14,bl+12],[s+19,bl+5],[s+28,bl+1],[s+31,bl]);
   }
   pts.push([w, bl]);

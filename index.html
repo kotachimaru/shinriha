@@ -1112,10 +1112,11 @@ function renderQuestion() {
   // 選択肢
   const optContainer = document.getElementById('q-options');
   const nums = ['①', '②', '③', '④', '⑤'];
-  optContainer.innerHTML = question.options.map((opt, i) => `
+  const order = ensureOptionOrder(question);
+  optContainer.innerHTML = order.map((origIdx, i) => `
     <button class="option-btn" id="opt-${i}" onclick="selectOption(${i + 1})">
       <span class="option-num">${nums[i]}</span>
-      <span class="option-text">${opt}</span>
+      <span class="option-text">${question.options[origIdx]}</span>
     </button>
   `).join('');
 
@@ -1153,13 +1154,43 @@ function selectOption(i) {
   document.getElementById('confirm-btn').disabled = false;
 }
 
+// ===== 選択肢シャッフル =====
+// 「この問題は1が正解だった」という位置の暗記を防ぐため、表示順を毎回入れ替える。
+// 並びは問題ごとに一度だけ決めて保持するので、前の問題に戻っても変わらない。
+// REMAP_EXPLANATION_NUMS: 解説が①②③で選択肢を指しているアプリだけ true にする。
+const REMAP_EXPLANATION_NUMS = true;
+const OPT_CIRCLES = '①②③④⑤⑥⑦⑧⑨';
+
+function ensureOptionOrder(q) {
+  if (q._order) return q._order;
+  const n = (q.options || []).length;
+  const order = [];
+  for (let i = 0; i < n; i++) order.push(i);
+  for (let i = n - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = order[i]; order[i] = order[j]; order[j] = t;
+  }
+  q._order = order;
+  q._correctDisplay = order.indexOf(q.answer - 1) + 1;
+  return order;
+}
+
+function remapExplanationNums(q, text) {
+  if (!REMAP_EXPLANATION_NUMS || !q._order || !text) return text;
+  const map = {};
+  for (let disp = 0; disp < q._order.length; disp++) {
+    map[OPT_CIRCLES[q._order[disp]]] = OPT_CIRCLES[disp];
+  }
+  return text.replace(/[①-⑨]/g, function (c) { return map[c] || c; });
+}
+
 function confirmAnswer() {
   const selected = state.quiz.selectedOption;
   if (state.quiz.answered || !selected) return;
   state.quiz.answered = true;
 
   const question = state.quiz.questions[state.quiz.current];
-  const correct = question.answer;
+  const correct = question._correctDisplay || question.answer;
   const isCorrect = selected === correct;
 
   // 全ボタン無効化・色付け
@@ -1198,7 +1229,7 @@ function confirmAnswer() {
   saveStats(stats);
 
   // 解説表示（折りたたみ）
-  document.getElementById('explanation-text').innerHTML = formatExplanation(question.explanation);
+  document.getElementById('explanation-text').innerHTML = formatExplanation(remapExplanationNums(question, question.explanation));
   document.getElementById('explanation-box').classList.add('show');
 
   // ボタン切り替え

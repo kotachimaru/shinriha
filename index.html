@@ -928,7 +928,7 @@ async function submitEmail(email, errEl) {
     const docRef = window._fsDoc(window._db, 'subscribers', email);
     const snap = await window._fsGetDoc(docRef);
     if (!snap.exists()) {
-      errEl.textContent = 'このメールアドレスの登録が見つかりません。月額プランにご登録ください。';
+      errEl.innerHTML = 'このメールアドレスの登録が見つかりません。<br>お申し込み時と違うアドレスの可能性があります。<br>お支払い済みの場合は<b>再度のお申し込みは不要です。</b><a href="mailto:rabe0801@gmail.com" style="color:var(--accent)">rabe0801@gmail.com</a> までご連絡ください。';
       return;
     }
     const data = snap.data();
@@ -937,7 +937,7 @@ async function submitEmail(email, errEl) {
 
     // 有効期限切れ
     if (!isValid) {
-      errEl.textContent = '有効期限が切れています。再度お申し込みください。';
+      errEl.innerHTML = '有効期限が切れています。<br>お支払いが完了しているのにこの表示が出る場合、<b>再度のお申し込みは不要です。</b><br>お手数ですが <a href="mailto:rabe0801@gmail.com" style="color:var(--accent)">rabe0801@gmail.com</a> までご連絡ください。';
       return;
     }
     // 支払い失敗（期限内でも入金未確認）

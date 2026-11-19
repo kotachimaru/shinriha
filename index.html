@@ -946,11 +946,33 @@ async function openPortal() {
   }
 }
 
-async function submitEmail(email, errEl) {
+async function tryRecoverSubscription(email) {
+  // webhookの取りこぼしでロックアウトされた人を、その場でStripeに照会して復旧する
+  try {
+    const res = await fetch('https://us-central1-shinriha-7910b.cloudfunctions.net/recoverSubscription', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, app: 'shinriha' })
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    return data && data.recovered === true;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function submitEmail(email, errEl, retried) {
   try {
     const docRef = window._fsDoc(window._db, 'subscribers', email);
     const snap = await window._fsGetDoc(docRef);
     if (!snap.exists()) {
+      if (!retried) {
+        errEl.textContent = 'お支払い状況を確認しています…';
+        const ok = await tryRecoverSubscription(email);
+        errEl.textContent = '';
+        if (ok) { await submitEmail(email, errEl, true); return; }
+      }
       errEl.innerHTML = 'このメールアドレスの登録が見つかりません。<br>お申し込み時と違うアドレスの可能性があります。<br>お支払い済みの場合は<b>再度のお申し込みは不要です。</b><a href="mailto:rabe0801@gmail.com" style="color:var(--accent)">rabe0801@gmail.com</a> までご連絡ください。';
       return;
     }
@@ -960,6 +982,12 @@ async function submitEmail(email, errEl) {
 
     // 有効期限切れ
     if (!isValid) {
+      if (!retried) {
+        errEl.textContent = 'お支払い状況を確認しています…';
+        const ok = await tryRecoverSubscription(email);
+        errEl.textContent = '';
+        if (ok) { await submitEmail(email, errEl, true); return; }
+      }
       errEl.innerHTML = '有効期限が切れています。<br>お支払いが完了しているのにこの表示が出る場合、<b>再度のお申し込みは不要です。</b><br>お手数ですが <a href="mailto:rabe0801@gmail.com" style="color:var(--accent)">rabe0801@gmail.com</a> までご連絡ください。';
       return;
     }
